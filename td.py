@@ -209,7 +209,9 @@ class Device(object):
                 raise TDDeviceException('Failed to create new device')
 
             self.id = dev_id
-            #tdSetName()
+
+            # Set the name of the new device according to params provided. 
+            self.set_name(self.name)
         else:
             # Device does exist, adjust parameters accordingly. We obey the
             # index given at class init blindly here, and we don't trust the 
