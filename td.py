@@ -263,9 +263,8 @@ class Device(object):
     def get_index(self):
         return self.index
 
-    def turn_on(self, device_id):
-        if not isinstance(device_id, int):
-            raise TypeError
+    def turn_on(self):
+        device_id = self.id
 
         res = self._td._turn_on(device_id)
         if res == TELLSTICK_SUCCESS:
@@ -273,8 +272,7 @@ class Device(object):
         return False
 
     def turn_off(self, device_id):
-        if not isinstance(device_id, int):
-            raise TypeError
+        device_id = self.id
 
         res = self._td._turn_off(device_id)
         if res == TELLSTICK_SUCCESS:
