@@ -54,7 +54,7 @@ class Telldus(object):
         self._init_telldus()
         self.number_of_devices = self._get_number_of_devices()
 
-        # Init some global stuff
+        # Internal list of devices
         self.devices = []
 
     ## Wrappers for functions in telldus-core, for handling type conversions and 
@@ -151,6 +151,10 @@ class Telldus(object):
 
         # Loop every device index
         while current <= high:
+            self.recount_devices()
+
+            # If number of devices has changed, return new devices and rebuild
+            # internal list. 
             if self.number_of_devices != len(self.devices):
                 # Prepare relevant values
                 device_index = current
@@ -166,6 +170,11 @@ class Telldus(object):
                     name = device_name,
                     type = device_type
                 )
+
+                try:
+                    self.devices[current] = device
+                except(IndexError):
+                    self.devices.append(device)
             else:
                 device = self.devices[current]
 
@@ -209,6 +218,13 @@ class Device(object):
                 raise TDDeviceException('Failed to create new device')
 
             self.id = dev_id
+            # Because the C-API can't return the index we need to reset it 
+            # on new devices. 
+            self.index = None
+
+            # Append this new device to the internal list of the "superclass"
+            self._td.devices.append(self)
+            self._td.recount_devices()
 
             # Set the name of the new device according to params provided. 
             self.set_name(self.name)
@@ -240,6 +256,12 @@ class Device(object):
         if device_name == '':
             return False
         return device_name
+
+    def get_id(self):
+        return self.id
+
+    def get_index(self):
+        return self.index
 
     def turn_on(self, device_id):
         if not isinstance(device_id, int):
