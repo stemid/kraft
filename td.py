@@ -194,6 +194,9 @@ class Telldus(object):
             yield device
             current += 1
 
+            if current > len(devices):
+                break
+
     # Generator to iterate through all groups
     def Groups(self):
         return self.Devices(group=True)
@@ -271,7 +274,7 @@ class Device(object):
             return True
         return False
 
-    def turn_off(self, device_id):
+    def turn_off(self):
         device_id = self.id
 
         res = self._td._turn_off(device_id)
