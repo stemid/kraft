@@ -12,7 +12,7 @@
 #   Starting with regular selflearning on/off switches
 
 from platform import system as OS
-from ctypes import c_char_p, c_void_p, CDLL
+from ctypes import c_int, c_char_p, c_void_p, CDLL
 
 # Default library locations
 _DEFAULT_LIBRARY_MACOS = '/Library/Frameworks/TelldusCore.framework/TelldusCore'
@@ -27,13 +27,13 @@ METHOD_TURNOFF = 2
 METHOD_LEARN = 32
 
 # Device types
-TELLSTICK_TYPE_DEVICE = 1
-TELLSTICK_TYPE_GROUP = 2
-TELLSTICK_TYPE_SCENE = 3
+TYPE_DEVICE = 1
+TYPE_GROUP = 2
+TYPE_SCENE = 3
 
 # Class constructor, for handling input validation before calling lower 
 # layered C-API wrappers. 
-class Telldus:
+class Telldus(object):
     # Class initialiser, load the shared object and its symbols, do some 
     # pre-processing. 
     def __init__(self, *kw):
@@ -54,14 +54,22 @@ class Telldus:
         self._init_telldus()
         self.number_of_devices = self._get_number_of_devices()
 
-    # Wrappers for functions in telldus-core, for handling type conversions and 
-    # freeing up memory. 
+        # Init some global stuff
+        self.devices = []
+
+    ## Wrappers for functions in telldus-core, for handling type conversions and 
+    # freeing up memory. These should stay as true to the C API as possible 
+    # while converting values to Python objects. 
     def _init_telldus(self):
-        self.tdso.tdInit()
+        return self.tdso.tdInit()
+
+    def _add_device(self):
+        return self.tdso.tdAddDevice()
 
     def _get_number_of_devices(self):
         return self.tdso.tdGetNumberOfDevices()
 
+    # Returns 0 when device is not found, instead of -1 as API docs claim. 
     def _get_id(self, device_index):
         return self.tdso.tdGetDeviceId(device_index)
 
@@ -85,6 +93,12 @@ class Telldus:
 
         # Return the copied Python str
         return name
+
+    def _set_name(self, device_id, device_name):
+        set_name_func = self.tdso.tdSetName
+        set_name_func.argtypes = [c_int, c_char_p]
+
+        return set_name_func(device_id, device_name)
 
     # Largely same concept as _get_name
     def _get_protocol(self, device_id):
@@ -112,66 +126,146 @@ class Telldus:
     def _turn_off(self, device_id):
         return self.tdso.tdTurnOff(device_id)
 
-    ## "Public" methods here, for use by higher levels
+    ## "Public" methods here, for use by higher levels. These should 
+    # Pythonize output and use Exceptions when possible. 
     # Get the first device by default
     def get_device_by_index(self, index=0):
         if not isinstance(index, int):
             index = 0
-        return self._get_id(index)
 
-    def turn_on(self, device_id):
-        if not isinstance(device_id, int):
-            raise TypeError
-        return self._turn_on(device_id)
+        dev_id = self._get_id(index)
 
-    def turn_off(self, device_id):
-        if not isinstance(device_id, int):
-            raise TypeError
-        return self._turn_off(device_id)
+        if dev_id < 1:
+            return False
+        return dev_id
 
     def recount_devices(self):
         self.number_of_devices = self._get_number_of_devices()
 
-    # Generator to iterate through all devices
+    # Generator to iterate through all devices. This returns a class instance 
+    # of Device, which contains more Device-specific methods. 
     def Devices(self, group=False):
+        device = None
         current = 0
         high = self.number_of_devices
 
         # Loop every device index
         while current <= high:
-            device_index = current
-            device_id = self._get_id(current)
-            device_name = self._get_name(device_id)
-            device_type = self._get_device_type(device_id)
-            device_methods = self._methods(device_id, (
-                METHOD_TURNON|
-                METHOD_TURNOFF|
-                METHOD_LEARN
-            ))
+            if self.number_of_devices != len(self.devices):
+                # Prepare relevant values
+                device_index = current
+                device_id = self._get_id(current)
+                device_name = self._get_name(device_id)
+                device_type = self._get_device_type(device_id)
 
-            if group and device_type != TELLSTICK_TYPE_GROUP:
+                # Init the Device class
+                device = Device(
+                    self,
+                    index = device_index,
+                    id = device_id,
+                    name = device_name,
+                    type = device_type
+                )
+            else:
+                device = self.devices[current]
+
+            # Handle counter for groups
+            if group and device_type != TYPE_GROUP:
                 current += 1
                 continue
 
-            if not group and device_type != TELLSTICK_TYPE_DEVICE:
+            # Handle counter for devices
+            if not group and device_type != TYPE_DEVICE:
                 current += 1
                 continue
 
-            # Return useful info about each device
-            yield (
-                device_index, 
-                device_id, 
-                device_name,
-                device_methods,
-            )
+            # TODO: Scenes
+
+            # Return the class
+            yield device
             current += 1
 
     # Generator to iterate through all groups
     def Groups(self):
         return self.Devices(group=True)
 
+# This class will create the device if it does not exist. 
+class Device(object):
+    def __init__(self, Telldus, *kw):
+        self._td = Telldus
+
+        # Get device arguments, with default values
+        self.index = kw.get('index', 0)
+        self.id = kw.get('id', 0)
+        self.name = kw.get('name', 'My device')
+        self.type = kw.get('type', TYPE_DEVICE)
+
+        # Check if device parameters are ok
+        dev_id = self._td.get_device_by_index(self.index)
+        if not dev_id:
+            # Device does not exist, attempt to create with parameters given.
+            dev_id = self._td._add_device()
+            if dev_id < 0:
+                raise TDDeviceException('Failed to create new device')
+
+            self.id = dev_id
+            #tdSetName()
+        else:
+            # Device does exist, adjust parameters accordingly. We obey the
+            # index given at class init blindly here, and we don't trust the 
+            # user provided parameters. 
+            if self.id != dev_id:
+                self.id = dev_id
+
+            dev_name = self._td._get_name(self.id)
+            if self.name != dev_name:
+                self.name = dev_name
+
+            dev_type = self._td._get_device_type(self.id)
+            if self.type != dev_type:
+                self.type = dev_type
+
+    def set_name(self, device_name):
+        device_id = self.id
+
+        res = self._td._set_name(device_id, device_name)
+        return bool(res)
+
+    def get_name(self):
+        device_id = self.id
+
+        device_name = self._td._get_name(device_id)
+        if device_name == '':
+            return False
+        return device_name
+
+    def turn_on(self, device_id):
+        if not isinstance(device_id, int):
+            raise TypeError
+
+        res = self._td._turn_on(device_id)
+        if res == TELLSTICK_SUCCESS:
+            return True
+        return False
+
+    def turn_off(self, device_id):
+        if not isinstance(device_id, int):
+            raise TypeError
+
+        res = self._td._turn_off(device_id)
+        if res == TELLSTICK_SUCCESS:
+            return True
+        return False
+
 # Exception for TD class, handling errors thrown by C-API or internal errors.
-class TelldusException(Exception):
+class TDException(Exception):
+    def __init__(self, errstr):
+        self.errstr = errstr
+
+    def __str__(self):
+        return repr(self.errstr)
+
+class TDDeviceException(TDException):
     def __init__(self, errstr):
         self.errstr = errstr
 
