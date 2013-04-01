@@ -191,7 +191,7 @@ class Telldus(object):
 
 # This class will create the device if it does not exist. 
 class Device(object):
-    def __init__(self, Telldus, *kw):
+    def __init__(self, Telldus, **kw):
         self._td = Telldus
 
         # Get device arguments, with default values
