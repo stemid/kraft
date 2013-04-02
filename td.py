@@ -145,57 +145,39 @@ class Telldus(object):
     # Generator to iterate through all devices. This returns a class instance 
     # of Device, which contains more Device-specific methods. 
     def Devices(self, group=False):
+        # Re-count devices in internal counter
+        self.recount_devices()
+
         device = None
         current = 0
         high = self.number_of_devices
 
         # Loop every device index
-        while current <= high:
-            self.recount_devices()
-
-            # If number of devices has changed, return new devices and rebuild
-            # internal list. 
-            if self.number_of_devices != len(self.devices):
-                # Prepare relevant values
+        while current != high:
+            if self.number_of_devices < 1:
+                # No devices, need to add some.
+                raise StopIteration
+            else:
                 device_index = current
-                device_id = self._get_id(current)
-                device_name = self._get_name(device_id)
-                device_type = self._get_device_type(device_id)
 
+            if self.number_of_devices == len(self.devices):
+                device = self.devices[current]
+            else:
                 # Init the Device class
                 device = Device(
                     self,
-                    index = device_index,
-                    id = device_id,
-                    name = device_name,
-                    type = device_type
+                    index = device_index
                 )
 
                 try:
                     self.devices[current] = device
                 except(IndexError):
                     self.devices.append(device)
-            else:
-                device = self.devices[current]
 
-            # Handle counter for groups
-            if group and device_type != TYPE_GROUP:
-                current += 1
-                continue
-
-            # Handle counter for devices
-            if not group and device_type != TYPE_DEVICE:
-                current += 1
-                continue
-
-            # TODO: Scenes
+            current += 1
 
             # Return the class
             yield device
-            current += 1
-
-            if current > len(devices):
-                break
 
     # Generator to iterate through all groups
     def Groups(self):
