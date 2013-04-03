@@ -1,5 +1,10 @@
 Work in progress to create a web interface for the Tellstick and some devices connected to it that can power on/off lamps in my home so far. 
 
+
+This example assumes you have both a tellstick.conf file filled with devices (which are then irretated on in "for device in tell.Devices" as well as the telldusd daemon running.
+
+The goal is to eventually get around these requirements and allow a direct iteraction with, at the very least, no configuration file.
+
 # Example
 
     >>> import td
