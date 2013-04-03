@@ -16,7 +16,7 @@ from ctypes import c_int, c_char_p, c_void_p, CDLL
 
 # Default library locations
 _DEFAULT_LIBRARY_MACOS = '/Library/Frameworks/TelldusCore.framework/TelldusCore'
-_DEFAULT_LIBRARY_LINUX = '/usr/local/lib/libtelldus-core.so'
+_DEFAULT_LIBRARY_LINUX = 'libtelldus-core.so'
 
 ## Defining pre-proc macros from the telldus-core lib
 TELLSTICK_SUCCESS = 0
