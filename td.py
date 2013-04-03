@@ -144,7 +144,7 @@ class Telldus(object):
 
     # Generator to iterate through all devices. This returns a class instance 
     # of Device, which contains more Device-specific methods. 
-    def Devices(self, group=False):
+    def Devices(self):
         # Re-count devices in internal counter
         self.recount_devices()
 
@@ -160,6 +160,7 @@ class Telldus(object):
             else:
                 device_index = current
 
+            # Decide on using internal devices list or building a new one.
             if self.number_of_devices == len(self.devices):
                 device = self.devices[current]
             else:
@@ -169,11 +170,14 @@ class Telldus(object):
                     index = device_index
                 )
 
+                # If the device index exists in the list, simply update it. 
                 try:
                     self.devices[current] = device
                 except(IndexError):
+                    # If not, append it. 
                     self.devices.append(device)
 
+            # Increment counter
             current += 1
 
             # Return the class
