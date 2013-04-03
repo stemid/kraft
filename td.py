@@ -190,6 +190,8 @@ class Telldus(object):
 # This class will create the device if it does not exist. 
 class Device(object):
     def __init__(self, Telldus, **kw):
+        # Copy Telldus class object for use in this class. It's not quite 
+        # subclassing but it does the job. Probably room for improvement.  
         self._td = Telldus
 
         # Get device arguments, with default values
@@ -251,6 +253,30 @@ class Device(object):
 
     def get_index(self):
         return self.index
+
+    def learn(self):
+        method = self._td._methods(self.id, METHOD_LEARN)
+        if method == METHOD_LEARN:
+            res = self._td._learn(self.id)
+            if res == TELLSTICK_SUCCESS:
+                return True
+            else:
+                raise TDDeviceException('Could not teach device')
+        raise TDDeviceException('Device does not support learn')
+
+    def get_type(self):
+        # Neat trick since everything is an object and str() calls the 
+        # __str__ method in any object, not just classes. 
+        def __str__(self):
+            if self.type == 2:
+                return 'Group'
+            if self.type == 3:
+                return 'Scene'
+            return 'Device'
+        return self.type
+
+    # TODO: def is_group
+    # TODO: def is_device
 
     def turn_on(self):
         device_id = self.id
