@@ -37,8 +37,8 @@ The goal is to eventually get around these requirements and allow a direct itera
 # Example 2
 This probably only works if you have a tellstick.conf
 
-   >>> from td import Device, Telldus
-   >>> telldus = Telldus()
-   >>> d = Device(telldus,id=1)
-   >>> d.turn_on
-   >>> d.turn_off
+    >>> from td import Device, Telldus
+    >>> telldus = Telldus()
+    >>> d = Device(telldus,id=1)
+    >>> d.turn_on
+    >>> d.turn_off
