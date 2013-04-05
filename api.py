@@ -1,6 +1,7 @@
 # coding: utf-8
 # Kraft REST API
-# by Stefan Midjich 2013 Ⓐ (and Stewart Rutledge 2013)
+# by Stefan Midjich 2013 Ⓐ 
+#    Stewart Rutledge 2013
 
 # A very basic beginning to an api with a simple turn on/off function based on ID and some regexing
 

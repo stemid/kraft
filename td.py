@@ -126,6 +126,9 @@ class Telldus(object):
     def _turn_off(self, device_id):
         return self.tdso.tdTurnOff(device_id)
 
+    def _learn(self, device_id):
+        return self.tdso.tdLearn(device_id)
+
     ## "Public" methods here, for use by higher levels. These should 
     # Pythonize output and use Exceptions when possible. 
     # Get the first device by default
@@ -189,10 +192,10 @@ class Telldus(object):
 
 # This class will create the device if it does not exist. 
 class Device(object):
-    def __init__(self, Telldus, **kw):
-        # Copy Telldus class object for use in this class. It's not quite 
+    def __init__(self, telldus, **kw):
+        # Telldus class instance for use in this class. It's not quite 
         # subclassing but it does the job. Probably room for improvement.  
-        self._td = Telldus
+        self._td = telldus
 
         # Get device arguments, with default values
         self.index = kw.get('index', 0)
