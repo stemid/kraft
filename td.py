@@ -219,9 +219,6 @@ class Device(object):
             # Append this new device to the internal list of the "superclass"
             self._td.devices.append(self)
             self._td.recount_devices()
-
-            # Set the name of the new device according to params provided. 
-            self.set_name(self.name)
         else:
             # Device does exist, adjust parameters accordingly. We obey the
             # index given at class init blindly here, and we don't trust the 
