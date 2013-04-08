@@ -240,7 +240,7 @@ class Device(object):
         device_id = self._device_id
 
         res = self._td._set_name(device_id, device_name)
-        self.device_name = res
+        self._device_name = res
         return bool(res)
 
     @property
@@ -250,6 +250,7 @@ class Device(object):
         device_name = self._td._get_name(device_id)
         if device_name == '':
             return False
+        self._device_name = device_name
         return device_name
 
     def set_house(self, house_id):
