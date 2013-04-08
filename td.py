@@ -1,11 +1,11 @@
 # coding: utf-8
 # Telldus python library
-# by Stefan Midjich 2013 Ⓐ 
+# by Stefan Midjich 2013 Ⓐ
 
-# This was made for my Kraft web interface so the plan is to let this library 
-# grow organically with features added as I need/gain access to more devices 
-# and sensors. 
-# On the wishlist are sensors for humidity and temperature. 
+# This was made for my Kraft web interface so the plan is to let this library
+# grow organically with features added as I need/gain access to more devices
+# and sensors.
+# On the wishlist are sensors for humidity and temperature.
 
 ## Changelog
 # 2013-03-29
@@ -31,11 +31,11 @@ TYPE_DEVICE = 1
 TYPE_GROUP = 2
 TYPE_SCENE = 3
 
-# Class constructor, for handling input validation before calling lower 
-# layered C-API wrappers. 
+# Class constructor, for handling input validation before calling lower
+# layered C-API wrappers.
 class Telldus(object):
-    # Class initialiser, load the shared object and its symbols, do some 
-    # pre-processing. 
+    # Class initialiser, load the shared object and its symbols, do some
+    # pre-processing.
     def __init__(self, *kw):
         # Support to pass custom library name/path to class
         if kw:
@@ -46,8 +46,8 @@ class Telldus(object):
             else: # Default fallback is always Linux
                 library = _DEFAULT_LIBRARY_LINUX
 
-        # Load telldus-core library. Also makes C interface available to 
-        # higher level. 
+        # Load telldus-core library. Also makes C interface available to
+        # higher level.
         self.tdso = CDLL(library)
 
         # Initiate library
@@ -57,9 +57,9 @@ class Telldus(object):
         # Internal list of devices
         self.devices = []
 
-    ## Wrappers for functions in telldus-core, for handling type conversions and 
-    # freeing up memory. These should stay as true to the C API as possible 
-    # while converting values to Python objects. 
+    ## Wrappers for functions in telldus-core, for handling type conversions and
+    # freeing up memory. These should stay as true to the C API as possible
+    # while converting values to Python objects.
     def _init_telldus(self):
         return self.tdso.tdInit()
 
@@ -69,7 +69,7 @@ class Telldus(object):
     def _get_number_of_devices(self):
         return self.tdso.tdGetNumberOfDevices()
 
-    # Returns 0 when device is not found, instead of -1 as API docs claim. 
+    # Returns 0 when device is not found, instead of -1 as API docs claim.
     def _get_id(self, device_index):
         return self.tdso.tdGetDeviceId(device_index)
 
@@ -80,13 +80,13 @@ class Telldus(object):
 
         name_p = get_name_func(device_id)
 
-        # Convert void* to char* and copy char* from C library to local 
+        # Convert void* to char* and copy char* from C library to local
         # Python str.
         name = c_char_p(name_p).value
 
         # Free void* from memory of C library
         # For some reason it crashes everytime it tries to free memory on Mac,
-        # so I hope I can just skip that step because it's not working. 
+        # so I hope I can just skip that step because it's not working.
         if OS() != 'Darwin':
             self.tdso.tdReleaseString(name_p)
             name_p = None
@@ -99,6 +99,17 @@ class Telldus(object):
         set_name_func.argtypes = [c_int, c_char_p]
 
         return set_name_func(device_id, device_name)
+
+    # Sets the various parameters (see set_house function)
+    def _set_parameter(self, device_id, parameter, parm_value):
+        set_parameter_func = self.tdso.tdSetDeviceParameter
+        try:
+            parameter
+            parm_value
+        except:
+            raise
+        # Both parameter and parm_value need to be strings, if an integer is passed to parm_value it results in a seg fault. NOT GOOD!
+        return set_parameter_func(device_id, str(parameter), str(parm_value))
 
     # Largely same concept as _get_name
     def _get_protocol(self, device_id):
@@ -129,8 +140,8 @@ class Telldus(object):
     def _learn(self, device_id):
         return self.tdso.tdLearn(device_id)
 
-    ## "Public" methods here, for use by higher levels. These should 
-    # Pythonize output and use Exceptions when possible. 
+    ## "Public" methods here, for use by higher levels. These should
+    # Pythonize output and use Exceptions when possible.
     # Get the first device by default
     def get_device_by_index(self, index=0):
         if not isinstance(index, int):
@@ -145,8 +156,8 @@ class Telldus(object):
     def recount_devices(self):
         self.number_of_devices = self._get_number_of_devices()
 
-    # Generator to iterate through all devices. This returns a class instance 
-    # of Device, which contains more Device-specific methods. 
+    # Generator to iterate through all devices. This returns a class instance
+    # of Device, which contains more Device-specific methods.
     def Devices(self):
         # Re-count devices in internal counter
         self.recount_devices()
@@ -173,11 +184,11 @@ class Telldus(object):
                     index = device_index
                 )
 
-                # If the device index exists in the list, simply update it. 
+                # If the device index exists in the list, simply update it.
                 try:
                     self.devices[current] = device
                 except(IndexError):
-                    # If not, append it. 
+                    # If not, append it.
                     self.devices.append(device)
 
             # Increment counter
@@ -190,11 +201,11 @@ class Telldus(object):
     def Groups(self):
         return self.Devices(group=True)
 
-# This class will create the device if it does not exist. 
+# This class will create the device if it does not exist.
 class Device(object):
     def __init__(self, telldus, **kw):
-        # Telldus class instance for use in this class. It's not quite 
-        # subclassing but it does the job. Probably room for improvement.  
+        # Telldus class instance for use in this class. It's not quite
+        # subclassing but it does the job. Probably room for improvement. 
         self._td = telldus
 
         # Get device arguments, with default values
@@ -212,8 +223,8 @@ class Device(object):
                 raise TDDeviceException('Failed to create new device')
 
             self.id = dev_id
-            # Because the C-API can't return the index we need to reset it 
-            # on new devices. 
+            # Because the C-API can't return the index we need to reset it
+            # on new devices.
             self.index = None
 
             # Append this new device to the internal list of the "superclass"
@@ -221,8 +232,8 @@ class Device(object):
             self._td.recount_devices()
         else:
             # Device does exist, adjust parameters accordingly. We obey the
-            # index given at class init blindly here, and we don't trust the 
-            # user provided parameters. 
+            # index given at class init blindly here, and we don't trust the
+            # user provided parameters.
             if self.id != dev_id:
                 self.id = dev_id
 
@@ -238,6 +249,12 @@ class Device(object):
         device_id = self.id
 
         res = self._td._set_name(device_id, device_name)
+        return bool(res)
+
+    def set_house(self, house_id):
+        device_id = self.id
+
+        res = self._td._set_parameter(device_id, 'House', house_id)
         return bool(res)
 
     def get_name(self):
@@ -265,8 +282,8 @@ class Device(object):
         raise TDDeviceException('Device does not support learn')
 
     def get_type(self):
-        # Neat trick since everything is an object and str() calls the 
-        # __str__ method in any object, not just classes. 
+        # Neat trick since everything is an object and str() calls the
+        # __str__ method in any object, not just classes.
         def __str__(self):
             if self.type == 2:
                 return 'Group'
