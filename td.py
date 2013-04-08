@@ -1,8 +1,9 @@
 # coding: utf-8
 # Telldus python library
 # by Stefan Midjich 2013 Ⓐ
+#    Stewart Rutledge 2013
 
-# This was made for my Kraft web interface so the plan is to let this library
+# This was made for the Kraft web interface so the plan is to let this library
 # grow organically with features added as I need/gain access to more devices
 # and sensors.
 # On the wishlist are sensors for humidity and temperature.
@@ -57,8 +58,8 @@ class Telldus(object):
         # Internal list of devices
         self.devices = []
 
-    ## Wrappers for functions in telldus-core, for handling type conversions and
-    # freeing up memory. These should stay as true to the C API as possible
+    ## Wrappers for functions in libtelldus-core, for handling type conversions 
+    # and freeing up memory. These should stay as true to the C API as possible
     # while converting values to Python objects.
     def _init_telldus(self):
         return self.tdso.tdInit()
@@ -140,6 +141,8 @@ class Telldus(object):
     def _learn(self, device_id):
         return self.tdso.tdLearn(device_id)
 
+    ## End of wrapper functions for libtelldus-core
+
     ## "Public" methods here, for use by higher levels. These should
     # Pythonize output and use Exceptions when possible.
     # Get the first device by default
@@ -210,78 +213,76 @@ class Device(object):
 
         # Get device arguments, with default values
         self.index = kw.get('index', 0)
-        self.id = kw.get('id', 0)
-        self.name = kw.get('name', 'My device')
-        self.type = kw.get('type', TYPE_DEVICE)
 
         # Check if device parameters are ok
         dev_id = self._td.get_device_by_index(self.index)
         if not dev_id:
             # Device does not exist, attempt to create with parameters given.
             dev_id = self._td._add_device()
-            if dev_id < 0:
+
+            if not bool(dev_id):
                 raise TDDeviceException('Failed to create new device')
 
-            self.id = dev_id
+            self._device_id = dev_id
             # Because the C-API can't return the index we need to reset it
             # on new devices.
             self.index = None
+            # TODO: Perhaps recount_devices and guess the index?
 
             # Append this new device to the internal list of the "superclass"
             self._td.devices.append(self)
             self._td.recount_devices()
         else:
-            # Device does exist, adjust parameters accordingly. We obey the
-            # index given at class init blindly here, and we don't trust the
-            # user provided parameters.
-            if self.id != dev_id:
-                self.id = dev_id
-
-            dev_name = self._td._get_name(self.id)
-            if self.name != dev_name:
-                self.name = dev_name
-
-            dev_type = self._td._get_device_type(self.id)
-            if self.type != dev_type:
-                self.type = dev_type
+            # Device does exist, adjust parameters accordingly.
+            self._device_id = dev_id
 
     def set_name(self, device_name):
-        device_id = self.id
+        device_id = self._device_id
 
         res = self._td._set_name(device_id, device_name)
+        self.device_name = res
         return bool(res)
 
-    def set_house(self, house_id):
-        device_id = self.id
-
-        res = self._td._set_parameter(device_id, 'House', house_id)
-        return bool(res)
-
-    def get_name(self):
-        device_id = self.id
+    @property
+    def device_name(self):
+        device_id = self._device_id
 
         device_name = self._td._get_name(device_id)
         if device_name == '':
             return False
         return device_name
 
-    def get_id(self):
-        return self.id
+    def set_house(self, house_id):
+        device_id = self._device_id
 
-    def get_index(self):
+        res = self._td._set_parameter(device_id, 'House', house_id)
+        self.house_id = res
+        return bool(res)
+
+    @property
+    def device_house(self):
+        return self.house_id
+
+    @property
+    def device_id(self):
+        return self._device_id
+
+    @property
+    def device_index(self):
         return self.index
 
     def learn(self):
-        method = self._td._methods(self.id, METHOD_LEARN)
+        method = self._td._methods(self._device_id, METHOD_LEARN)
         if method == METHOD_LEARN:
-            res = self._td._learn(self.id)
+            res = self._td._learn(self._device_id)
             if res == TELLSTICK_SUCCESS:
                 return True
             else:
                 raise TDDeviceException('Could not teach device')
         raise TDDeviceException('Device does not support learn')
 
-    def get_type(self):
+    @property
+    def device_type(self):
         # Neat trick since everything is an object and str() calls the
         # __str__ method in any object, not just classes.
         def __str__(self):
@@ -296,7 +297,7 @@ class Device(object):
     # TODO: def is_device
 
     def turn_on(self):
-        device_id = self.id
+        device_id = self._device_id
 
         res = self._td._turn_on(device_id)
         if res == TELLSTICK_SUCCESS:
@@ -304,7 +305,7 @@ class Device(object):
         return False
 
     def turn_off(self):
-        device_id = self.id
+        device_id = self._device_id
 
         res = self._td._turn_off(device_id)
         if res == TELLSTICK_SUCCESS:
