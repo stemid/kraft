@@ -45,6 +45,23 @@ This probably only works if you have a tellstick.conf
     >>> d.turn_on
     >>> d.turn_off
 
+### Example 3
+
+This example demonstrates that the current state of the Device class cannot get an index if it creates a new device. 
+
+    >>> reload(td)
+    <module 'td' from 'td.py'>
+    >>> t = td.Telldus()
+    >>> d = td.Device(t, index=20)
+    >>> d.device_id
+    14
+    >>> d.device_index
+    >>> d = td.Device(t, index=2)
+    >>> d.device_id
+    6
+    >>> d.device_index
+    2
+
 ## Files
 
   * td.py library is to handle C-API wrapping.
