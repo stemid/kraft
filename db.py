@@ -1,17 +1,12 @@
-import sqlite3 as conn
+from web import database
 
-db = conn.connect('telldus.db')
-
+db = database(dbn='sqlite', db='telldus.db')
 
 def initialize_db():
-  with db:
-    cur = db.cursor()
-    cur.execute("CREATE TABLE DeviceT(id INT primary key, name TEXT, dev_id INT)")
+    db.query('create table Device(name STRING, did INTEGER, house INTEGER, protocol STRING);')
 
-def add_device(device_id,name):
-  with db:
-    cur = db.cursor()
-    cur.execute("INSERT INTO DeviceT VALUES(1,%s,%i)") % (name,device_id)
-
-
-add_device("1","test name")
+def add_device(name,did,house,protocol):
+    try:
+        db.insert(name,did,house,protocol)
+    except:
+        raise

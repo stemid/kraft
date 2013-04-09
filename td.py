@@ -17,7 +17,7 @@ from ctypes import c_int, c_char_p, c_void_p, CDLL
 
 # Default library locations
 _DEFAULT_LIBRARY_MACOS = '/Library/Frameworks/TelldusCore.framework/TelldusCore'
-_DEFAULT_LIBRARY_LINUX = 'libtelldus-core.so'
+_DEFAULT_LIBRARY_LINUX = 'libtelldus-core.so.2'
 
 ## Defining pre-proc macros from the telldus-core lib
 TELLSTICK_SUCCESS = 0
@@ -102,15 +102,21 @@ class Telldus(object):
         return set_name_func(device_id, device_name)
 
     # Sets the various parameters (see set_house function)
-    def _set_parameter(self, device_id, parameter, parm_value):
+    def _set_parameter(self, device_id, param_key, param_value):
         set_parameter_func = self.tdso.tdSetDeviceParameter
         try:
-            parameter
-            parm_value
+            param_key
+            param_value
         except:
             raise
         # Both parameter and parm_value need to be strings, if an integer is passed to parm_value it results in a seg fault. NOT GOOD!
-        return set_parameter_func(device_id, str(parameter), str(parm_value))
+        return set_parameter_func(device_id, str(param_key), str(param_value))
+
+    def _set_model(self, device_id, model_name):
+        set_model_func = self.tdso.tdSetModel
+
+        return set_model_func(device_id, str(model_name))
+
 
     # Largely same concept as _get_name
     def _get_protocol(self, device_id):
@@ -259,6 +265,20 @@ class Device(object):
         res = self._td._set_parameter(device_id, 'House', house_id)
         self.house_id = res
         return bool(res)
+
+    def set_unit(self, unit):
+        device_id = self._device_id
+
+        res = self._td._set_parameter(device_id, 'Unit', unit)
+        self.unit = res
+        return bool(res)
+
+    def set_model(self, model):
+        device_id = self._device_id
+
+        res = self._td._set_model(device_id, model)
+        self.model = res
+
 
     @property
     def device_house(self):
