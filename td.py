@@ -309,29 +309,27 @@ class Device(object):
 
         return device_name
 
-    @device_name.setter
-    def name(self, device_name):
+    @name.setter
+    def name(self, device_name=''):
         device_id = self._device_id
 
         res = self._td._set_name(device_id, device_name)
         return bool(res)
 
-    @device_name.deleter
+    @name.deleter
     def name(self):
         device_id = self._device_id
 
         res = self._td._set_name(device_id, '')
         return bool(res)
-    ## End of Device.device_name property
 
-    # These are shortcuts for commonly used parameters. 
     @property
     def house(self):
         device_id = self._device_id
         house = self.get_parameter('house')
         return house
 
-    @property.setter
+    @house.setter
     def house(self, house):
         device_id = self._device_id
         return self.set_parameter('house', house)
@@ -341,7 +339,7 @@ class Device(object):
         device_id = self._device_id
         return self.get_parameter('unit')
 
-    @property.setter
+    @unit.setter
     def unit(self, unit=''):
         device_id = self._device_id
         return self.set_parameter('unit', unit)
@@ -364,7 +362,15 @@ class Device(object):
 
     @property
     def index(self):
-        return self.index
+        return self._index
+
+    @index.setter
+    def index(self, index):
+        self._index = index
+
+    @index.deleter
+    def index(self):
+        del self._index
 
     @property
     def type(self):
