@@ -101,8 +101,23 @@ class Telldus(object):
 
         return set_name_func(device_id, device_name)
 
+    # Gets parameters from device
+    def _get_device_parameter(self, device_id, param_key='', default_value=''):
+        get_parameter_func = self.tdso.tdGetDeviceParameter
+        get_parameter_func.restype = c_void_p
+        get_parameter_func.argtypes = [c_int, c_char_p, c_char_p]
+
+        param_p = get_parameter_func(device_id, param_key, default_value)
+        param = c_char_p(param_p).value
+
+        if OS() != 'Darwin':
+            self.tdso.tdReleaseString(param_p)
+            param_p = None
+
+        return param
+
     # Sets the various parameters (see Device.house property)
-    def _set_parameter(self, device_id, param_key='', param_value=''):
+    def _set_device_parameter(self, device_id, param_key='', param_value=''):
         set_parameter_func = self.tdso.tdSetDeviceParameter
 
         # Both parameter and parm_value need to be strings, if an integer is 
@@ -117,10 +132,18 @@ class Telldus(object):
         protocol_p = get_protocol_func(device_id)
         protocol = c_char_p(protocol_p).value
 
-        self.tdso.tdReleaseString(protocol_p)
-        protocol_p = None
+        if OS() != 'Darwin':
+            self.tdso.tdReleaseString(protocol_p)
+            protocol_p = None
 
         return protocol
+
+    def _set_protocol(self, device_id, protocol):
+        set_protocol_func = self.tdso.tdSetProtocol
+        set_protocol_func.restype = c_void_p
+        set_protocol_func.argtypes = [c_int, c_char_p]
+
+        return set_protocol_func(device_id, protocol)
 
     def _get_device_type(self, device_id):
         return self.tdso.tdGetDeviceType(device_id)
@@ -131,6 +154,10 @@ class Telldus(object):
 
         model_p = get_model_func(device_id)
         model = c_char_p(model_p).value
+
+        if OS() != 'Darwin':
+            self.tdso.tdReleaseString(model_p)
+            model_p = None
 
         return model
 
@@ -158,6 +185,7 @@ class Telldus(object):
 
     ## "Public" methods here, for use by higher levels. These should
     # Pythonize output and use Exceptions when possible.
+
     # Get the first device by default
     def get_device_by_index(self, index=0):
         if not isinstance(index, int):
@@ -213,10 +241,6 @@ class Telldus(object):
             # Return the class
             yield device
 
-    # Generator to iterate through all groups
-    def Groups(self):
-        return self.Devices(group=True)
-
 # This class will create the device if it does not exist.
 class Device(object):
     def __init__(self, telldus, **kw):
@@ -258,6 +282,7 @@ class Device(object):
         self.parameters = {}
 
     ## Methods here
+
     # Set parameters for the device
     def set_parameter(self, parameter=None, value=''):
         device_id = self._device_id
@@ -265,11 +290,24 @@ class Device(object):
         if not parameter:
             raise ValueError('"parameter" is required argument')
 
-        res = self._td_set_parameter(device_id, parameter, value)
+        res = self._td._set_device_parameter(device_id, parameter, value)
 
         if res is True:
             self.parameters[parameter] = value
         return bool(res)
+
+    # Get a parameter of the device
+    def get_parameter(self, parameter=None, default_value=None):
+        device_id = self._device_id
+
+        if not parameter:
+            raise ValueError('"parameter is required argument')
+
+        value = self._td._get_device_parameter(device_id, parameter, '')
+
+        if bool(value) is False:
+            return default_value
+        return value
 
     def turn_on(self):
         device_id = self._device_id
@@ -297,7 +335,11 @@ class Device(object):
                 raise TDDeviceException('Could not teach device')
         raise TDDeviceException('Device does not support learn')
 
+    # TODO: def is_group
+    # TODO: def is_device
+
     ## Define all properties here
+
     # Device.device_name property
     @property
     def name(self):
@@ -324,6 +366,33 @@ class Device(object):
         return bool(res)
 
     @property
+    def model(self):
+        device_id = self._device_id
+        return self._td._get_model(device_id)
+
+    @model.setter
+    def model(self, model):
+        device_id = self._device_id
+        try:
+            res = self._td._set_model(device_id, model)
+        except:
+            raise
+
+    @property
+    def protocol(self):
+        device_id = self._device_id
+        return self._td._get_protocol(device_id)
+
+    @protocol.setter
+    def protocol(self, protocol):
+        device_id = self._device_id
+        try:
+            self._td._set_protocol(device_id, protocol)
+        except:
+            raise
+
+    # Read-only properties
+    @property
     def house(self):
         device_id = self._device_id
         house = self.get_parameter('house')
@@ -344,18 +413,6 @@ class Device(object):
         device_id = self._device_id
         return self.set_parameter('unit', unit)
 
-    @property
-    def model(self):
-        device_id = self._device_id
-        return self._td._get_model(device_id)
-
-    @model.setter
-    def model(self, model):
-        device_id = self._device_id
-
-        res = self._td._set_model(device_id, model)
-
-    # Read-only properties
     @property
     def id(self):
         return self._device_id
@@ -383,9 +440,6 @@ class Device(object):
                 return 'Scene'
             return 'Device'
         return self.type
-
-    # TODO: def is_group
-    # TODO: def is_device
 
 # Exception for TD class, handling errors thrown by C-API or internal errors.
 class TDException(Exception):
