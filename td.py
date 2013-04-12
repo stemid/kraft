@@ -449,7 +449,7 @@ class TDError(Exception):
     def __str__(self):
         return repr(self.errstr)
 
-class TDDeviceError(TDException):
+class TDDeviceError(TDError):
     def __init__(self, errstr):
         self.errstr = errstr
 
