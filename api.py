@@ -3,33 +3,74 @@
 # by Stefan Midjich 2013 Ⓐ 
 #    Stewart Rutledge 2013
 
-# A very basic beginning to an api with a simple turn on/off function based on ID and some regexing
-
 import web
-import re
 from td import Telldus, Device
+
+# Initiate Telldus library
 td = Telldus()
 
 urls = (
-  '/([0-9])/turn/(off|on)', 'turn_off_and_on'
+    '/device/(off|on|parameter|model|protocol)', 'Device',
 )
 
-class turn_off_and_on:
-    def GET(self, device_id, method):
-        d = Device(td,id=device_id)
-        on = re.match("^on$", method)
-        off = re.match("^off$", method)
+# Set to JSON output globally since this is pure REST API
+web.header('Content-type', 'application/json')
+
+class Device:
+    def __init__(self):
+        query = web.input(
+            device_index = None,
+            # TODO: device_name = None
+        )
+
+        if not device_index and not device_name:
+            raise web.internalerror()
+
+        # TODO: Only supports by index now, fix by name later. 
+        # Initiate the device
         try:
-          if on:
+            self._d = Device(td, index=query.device_index)
+        except(TDDeviceError), e:
+            web.internalerror()
+            return json.dumps(dict(error=str(e)))
+
+    # This is mostly to get properties of the device but also to call methods
+    # like turn_on, turn_off and such. 
+    def GET(self, device_index, method):
+        if method == 'on':
             d.turn_on()
-          if off:
+            return web.ok()
+
+        if method == 'off':
             d.turn_off()
-        except:
-          return "Could not turn device %s %s" % (device_id, method)
-        return "Turned device %s %s \n" % (device_id, method)
+            return web.ok()
+
+        if method == 'parameter':
+            query = web.input(
+                parameter = None,
+                value = ''
+            )
+
+            if not query.parameter:
+                raise web.badrequest()
+
+            try:
+                value = d.get_parameter(parameter)
+            except:
+                raise web.internalerror()
+
+            if not value:
+                raise web.notfound()
+
+        if method == 'model':
+            model = d.model
+            if not model:
+                raise web.notfound()
+
+app = web.application(urls, globals())
 
 if __name__ == "__main__":
-    app = web.application(urls, globals())
     app.run()
 
-
+if __name__.startswith('_mod_wsgi_'):
+    application = app.wsgifunc()
