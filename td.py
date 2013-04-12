@@ -261,7 +261,7 @@ class Device(object):
             dev_id = self._td._add_device()
 
             if not bool(dev_id):
-                raise TDDeviceException('Failed to create new device')
+                raise TDDeviceError('Failed to create new device')
 
             # Save new device ID
             self._device_id = dev_id
@@ -332,8 +332,8 @@ class Device(object):
             if res == TELLSTICK_SUCCESS:
                 return True
             else:
-                raise TDDeviceException('Could not teach device')
-        raise TDDeviceException('Device does not support learn')
+                raise TDDeviceError('Could not teach device')
+        raise TDDeviceError('Device does not support learn')
 
     # TODO: def is_group
     # TODO: def is_device
@@ -347,7 +347,7 @@ class Device(object):
 
         device_name = self._td._get_name(device_id)
         if device_name == '':
-            raise TDDeviceException('Device not found')
+            raise TDDeviceError('Device not found')
 
         return device_name
 
@@ -442,14 +442,14 @@ class Device(object):
         return self.type
 
 # Exception for TD class, handling errors thrown by C-API or internal errors.
-class TDException(Exception):
+class TDError(Exception):
     def __init__(self, errstr):
         self.errstr = errstr
 
     def __str__(self):
         return repr(self.errstr)
 
-class TDDeviceException(TDException):
+class TDDeviceError(TDException):
     def __init__(self, errstr):
         self.errstr = errstr
 
