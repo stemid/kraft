@@ -7,7 +7,32 @@ This example assumes you have both a tellstick.conf file filled with devices (wh
 
 The goal is to eventually get around these requirements and allow a direct iteraction with, at the very least, no configuration file.
 
-### Example
+### Example of learning a new device
+
+Initiating the Device class with a new index will create a new, blank, device. Initiating it with an existing index will take over an existing device. 
+
+    >>> import td
+    >>> t = td.Telldus()
+    >>> d = td.Device(t, index=8)
+    >>> d.model = 'selflearning-switch'
+    >>> d.protocol
+    'everflourish'
+    >>> d.model
+    'selflearning-switch'
+    >>> d.house
+    >>> d.unit
+    >>> d.house = '1488'
+    >>> d.unit = '1'
+    >>> d.house
+    '1488'
+    >>> d.unit
+    '1'
+    >>> d.learn()
+    True
+    >>> d.turn_off()
+    True
+
+### Example of iterating over existing devices
 
     >>> import td
     >>> tell = td.Telldus()
@@ -36,32 +61,6 @@ The goal is to eventually get around these requirements and allow a direct itera
     >>> devices[7].get_name()
     'lol'
 
-### Example 2
-This probably only works if you have a tellstick.conf
-
-    >>> from td import Device, Telldus
-    >>> telldus = Telldus()
-    >>> d = Device(telldus,id=1)
-    >>> d.turn_on
-    >>> d.turn_off
-
-### Example 3
-
-This example demonstrates that the current state of the Device class cannot get an index if it creates a new device. 
-
-    >>> reload(td)
-    <module 'td' from 'td.py'>
-    >>> t = td.Telldus()
-    >>> d = td.Device(t, index=20)
-    >>> d.device_id
-    14
-    >>> d.device_index
-    >>> d = td.Device(t, index=2)
-    >>> d.device_id
-    6
-    >>> d.device_index
-    2
-
 ## Files
 
   * td.py library is to handle C-API wrapping.
@@ -73,4 +72,3 @@ This example demonstrates that the current state of the Device class cannot get 
 
   * Avoid creating and editing tellstick.conf
   * Keep td.py library stateless of devices, prefer higher layers for this
-
