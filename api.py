@@ -4,45 +4,45 @@
 #    Stewart Rutledge 2013
 
 import web
-from td import Telldus, Device
+import td
 
 # Initiate Telldus library
-td = Telldus()
+telldus = td.Telldus()
 
 urls = (
     '/device/(off|on|parameter|model|protocol)', 'Device',
 )
 
-# Set to JSON output globally since this is pure REST API
-web.header('Content-type', 'application/json')
-
 class Device:
     def __init__(self):
+        # Set to JSON output
+        web.header('Content-type', 'application/json')
+
         query = web.input(
-            device_index = None,
+            index = None,
             # TODO: device_name = None
         )
 
-        if not device_index and not device_name:
+        if not query.index and not query.device_name:
             raise web.internalerror()
 
         # TODO: Only supports by index now, fix by name later. 
         # Initiate the device
         try:
-            self._d = Device(td, index=query.device_index)
-        except(TDDeviceError), e:
+            self._d = td.Device(telldus, index=int(query.index))
+        except(td.TDDeviceError), e:
             web.internalerror()
             return json.dumps(dict(error=str(e)))
 
     # This is mostly to get properties of the device but also to call methods
     # like turn_on, turn_off and such. 
-    def GET(self, device_index, method):
+    def GET(self, method):
         if method == 'on':
-            d.turn_on()
+            self._d.turn_on()
             return web.ok()
 
         if method == 'off':
-            d.turn_off()
+            self._d.turn_off()
             return web.ok()
 
         if method == 'parameter':
@@ -55,7 +55,7 @@ class Device:
                 raise web.badrequest()
 
             try:
-                value = d.get_parameter(parameter)
+                value = self._d.get_parameter(parameter)
             except:
                 raise web.internalerror()
 
@@ -63,7 +63,7 @@ class Device:
                 raise web.notfound()
 
         if method == 'model':
-            model = d.model
+            model = self._d.model
             if not model:
                 raise web.notfound()
 
