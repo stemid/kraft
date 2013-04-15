@@ -2,11 +2,6 @@
 
 Work in progress to create a web interface for the Tellstick and some devices connected to it that can power on/off lamps in my home so far. 
 
-
-This example assumes you have both a tellstick.conf file filled with devices (which are then irretated on in "for device in tell.Devices" as well as the telldusd daemon running.
-
-The goal is to eventually get around these requirements and allow a direct iteraction with, at the very least, no configuration file.
-
 ### Example of learning a new device
 
 Initiating the Device class with a new index will create a new, blank, device. Initiating it with an existing index will take over an existing device. 
@@ -35,31 +30,23 @@ Initiating the Device class with a new index will create a new, blank, device. I
 ### Example of iterating over existing devices
 
     >>> import td
-    >>> tell = td.Telldus()
-    >>> devices = []
-    >>> for device in tell.Devices():
-    ...  devices.append(device)
+    >>> t = td.Telldus()
+    >>> for device in t.Devices():
+    ...  print "ID: %s, Name: %s" % (device.id, device.name)
     ...
-    >>> devices
-    [<td.Device object at 0x1099a5710>, <td.Device object at 0x1099a53d0>, <td.Device object at 0x1099a56d0>, <td.Device object at 0x1099a5810>, <td.Device object at 0x1099a5fd0>, <td.Device object at 0x1099af090>, <td.Device object at 0x1099af110>, <td.Device object at 0x1099af190>, <td.Device object at 0x1099f2890>]
-    >>> devices[0].get_name()
-    'testar'
-    >>> devices[1].get_name()
-    'Sovrum'
-    >>> devices[2].get_name()
-    'UNKNOWN'
-    >>> devices[3].get_name()
-    'Lampa 1'
-    >>> devices[3].turn_on()
-    True
-    >>> devices[3].turn_off()
-    True
-    >>> len(devices)
-    9
-    >>> devices[8].get_name()
-    'Vardagsrum'
-    >>> devices[7].get_name()
-    'lol'
+    ID: 7, Name: testar
+    ID: 11, Name: wut
+    ID: 6, Name: Sovrum
+    ID: 14, Name:
+    ID: 10, Name: UNKNOWN
+    ID: 5, Name: Lampa 1
+    ID: 13, Name:
+    ID: 4, Name: Fläkt
+    ID: 9, Name: Vardagsrum lampa 1
+    ID: 3, Name: Lampa 1
+    ID: 12, Name:
+    ID: 8, Name: lol
+    ID: 2, Name: Vardagsrum
 
 ## Files
 
