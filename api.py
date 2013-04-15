@@ -15,24 +15,39 @@ urls = (
 
 class Device:
     def __init__(self):
+        from fnmatch import fnmatch
+
         # Set to JSON output
         web.header('Content-type', 'application/json')
 
         query = web.input(
             index = None,
-            # TODO: device_name = None
+            name = None
         )
 
-        if not query.index and not query.device_name:
-            raise web.internalerror()
+        device = None
 
-        # TODO: Only supports by index now, fix by name later. 
-        # Initiate the device
-        try:
-            self._d = td.Device(telldus, index=int(query.index))
-        except(td.TDDeviceError), e:
-            web.internalerror()
-            return json.dumps(dict(error=str(e)))
+        # We have a device index
+        if query.index:
+            # Initiate the device
+            try:
+                self._d = td.Device(telldus, index=int(query.index))
+            except(td.TDDeviceError), e:
+                web.internalerror()
+                return json.dumps(dict(error=str(e)))
+
+        # We have a device name
+        if query.name:
+            # Find the device
+            for device in telldus.Devices():
+                if fnmatch(device.name, '%s*' % query.name):
+                    break
+                device = None
+
+        # Use the device
+        if not device:
+            raise web.notfound()
+        self._d = device
 
     # This is mostly to get properties of the device but also to call methods
     # like turn_on, turn_off and such. 

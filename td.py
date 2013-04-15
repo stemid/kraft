@@ -346,9 +346,6 @@ class Device(object):
         device_id = self._device_id
 
         device_name = self._td._get_name(device_id)
-        if device_name == '':
-            raise TDDeviceError('Device not found')
-
         return device_name
 
     @name.setter
