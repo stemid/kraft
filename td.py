@@ -1,6 +1,5 @@
-# coding: utf-8
 # Telldus python library
-# by Stefan Midjich Ⓐ
+# by Stefan Midjich
 #    Stewart Rutledge
 
 # This was made for the Kraft web interface so the plan is to let this library
@@ -184,6 +183,9 @@ class Telldus(object):
     def _learn(self, device_id):
         return self.tdso.tdLearn(device_id)
 
+    def _last_sent_command(self, device_id, methods):
+        return self.tdso.tdLastSentCommand(device_id, methods)
+
     ## End of wrapper functions for libtelldus-core
 
     ## "Public" methods here, for use by higher levels. These should
@@ -279,6 +281,13 @@ class Device(object):
 
         # Init parameters dictionary
         self.parameters = {}
+
+        # Check supported methods
+        self._methods = self._td._methods(self.id, (
+            METHOD_TURNON |
+            METHOD_TURNOFF |
+            METHOD_LEARN
+        ))
 
         # Append this new device to the internal list of the "superclass"
         self._td.devices.append(self)
@@ -433,13 +442,9 @@ class Device(object):
     def index(self):
         return self._index
 
-    @index.setter
-    def index(self, index):
-        self._index = index
-
-    @index.deleter
-    def index(self):
-        del self._index
+    @property
+    def methods(self):
+        return self._methods
 
     @property
     def type(self):
