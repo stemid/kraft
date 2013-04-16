@@ -7,13 +7,30 @@
       data-position-to="window"
       data-role="button" 
       data-iconpos="notext" 
-      data-icon="gear">Settings</a>
+      data-icon="gear">$_('Settings')</a>
     <h1>Kraft</h1>
+    <a 
+      href="#add-device" 
+      data-rel="popup"
+      data-transition="slide"
+      data-position-to="window"
+      data-role="button" 
+      data-iconpos="notext" 
+      data-icon="plus">$_('Add')</a>
   </div>
   <div data-role="content">
-    <ul data-role="listview" data-inset="true" data-filter="true">
+    <ul class="device-list"
+        data-role="listview" 
+        data-inset="true" 
+        data-filter="true" 
+        data-filter-placeholder="$_('Filter items')">
       $for device in devices:
-        <li><a href="#">$:device.name</a></li>
+        <li><button data-icon="star" id="device-toggle-$:device.id">
+          $if not device.name:
+            $_('Untitled')
+          $else:
+            $:device.name
+        </button></li>
 
     </ul>
   </div>

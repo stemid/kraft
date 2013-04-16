@@ -1,5 +1,6 @@
 # Kraft web interface
 
+import gettext
 import web
 from settings import Settings
 s = Settings()
@@ -11,9 +12,20 @@ import td
 # Initiate Telldus library
 telldus = td.Telldus()
 
+# Prepare localization
+gettext.install('messages', settings['i18n_path'], unicode=True)
+gettext.translation(
+    'messages', 
+    settings['i18n_path'], 
+    languages=[
+        settings['locale']
+    ]
+).install(True)
+
 urls = (
     '/', 'Kraft',
-    '/device/(off|on|parameter|model|protocol)', 'api.Device',
+    '/device/(off|on|learn|parameter|model|protocol)', 'api.Device',
+    '/device', 'api.Device',
 )
 
 class Kraft:
@@ -28,6 +40,7 @@ class Kraft:
             base='base',
             globals = {
                 'devices': self._devices,
+                '_': _, # _ is automatically created by gettext.install()
             }
         )
         return tpl.index()

@@ -1,3 +1,6 @@
+# Settings for kraft API and Web UI
+
+# Edit this config block before attempting science.
 config = {
     'debug': False,
     'template_path': 'templates',
@@ -6,6 +9,7 @@ config = {
     'locale': 'sv_SE',
 }
 
+# Try to avoid editing anything below this line, unless you're a nerd. 
 from os.path import join, abspath, dirname
 
 # Helpful functions for relative paths

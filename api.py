@@ -1,8 +1,8 @@
-# coding: utf-8
 # Kraft REST API
-# by Stefan Midjich 2013 Ⓐ 
+# by Stefan Midjich 2013
 #    Stewart Rutledge 2013
 
+import json
 import web
 import td
 
@@ -47,8 +47,9 @@ class Device:
 
     # This is mostly to get properties of the device but also to call methods
     # like turn_on, turn_off and such. 
-    def GET(self, method):
-        if method == 'on':
+    def GET(self, method=None):
+        # Default is to turn something on
+        if method == 'on' or not method:
             self._d.turn_on()
             return web.ok()
 
@@ -56,6 +57,8 @@ class Device:
             self._d.turn_off()
             return web.ok()
 
+        # TODO: Test this so it doesn't clash with the web.input() call in 
+        # __init__()
         if method == 'parameter':
             query = web.input(
                 parameter = None,
@@ -73,7 +76,30 @@ class Device:
             if not value:
                 raise web.notfound()
 
+            return json.dumps(dict(
+                parameter = parameter,
+                value = value
+            ))
+
         if method == 'model':
             model = self._d.model
             if not model:
                 raise web.notfound()
+
+        if method == 'learn':
+            try:
+                self._d.learn()
+            except(td.TDDeviceError), e:
+                web.internalerror()
+                return json.dumps(dict(error=str(e)))
+            return web.ok()
+
+    def DELETE(self):
+        try:
+            res = self._d.remove()
+        except(td.TDDeviceError), e:
+            web.internalerror()
+            return json.dumps(dict(error=str(e)))
+
+        if res is True:
+            return web.ok()
