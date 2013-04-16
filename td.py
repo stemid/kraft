@@ -257,7 +257,7 @@ class Device(object):
             raise TypeError('First argument must be Telldus instance')
 
         # Get device arguments, with default values
-        self.index = kw.get('index', 0)
+        self._index = kw.get('index', 0)
 
         # Check if device exists based on index given
         dev_id = self._td.get_device_by_index(self.index)
@@ -273,7 +273,7 @@ class Device(object):
 
             # Because the C-API can't return the index we need to reset it
             # on new devices.
-            self.index = None
+            self._index = None
             # TODO: Perhaps recount_devices and guess the index?
         else:
             # Device does exist, save/update its device ID
