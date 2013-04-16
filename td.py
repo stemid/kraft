@@ -67,6 +67,9 @@ class Telldus(object):
     def _add_device(self):
         return self.tdso.tdAddDevice()
 
+    def _remove_device(self, device_id):
+        return self.tdso.tdRemoveDevice(device_id)
+
     def _get_number_of_devices(self):
         return self.tdso.tdGetNumberOfDevices()
 
@@ -274,13 +277,18 @@ class Device(object):
             # Device does exist, save/update its device ID
             self._device_id = dev_id
 
-        # Append this new device to the internal list of the "superclass"
-        self._td.devices.append(self)
-        self._td.recount_devices()
-        
         # Init parameters dictionary
         self.parameters = {}
 
+        # Append this new device to the internal list of the "superclass"
+        self._td.devices.append(self)
+
+        # The index position will be needed if the device were to be deleted
+        self._devices_index = len(self._td.devices)-1
+
+        # Lastly recount the number of devices in the superclass
+        self._td.recount_devices()
+        
     ## Methods here
 
     # Set parameters for the device
@@ -335,8 +343,15 @@ class Device(object):
                 raise TDDeviceError('Could not teach device')
         raise TDDeviceError('Device does not support learn')
 
-    # TODO: def is_group
-    # TODO: def is_device
+    def remove(self):
+        device_id = self._device_id
+        super_device_id = self._td.devices[self._devices_index].id
+
+        if device_id != super_device_id:
+            raise TDDeviceError('Unmatched device IDs, refusing to remove')
+
+        res = self._td._remove_device(device_id)
+        return bool(res)
 
     ## Define all properties here
 
