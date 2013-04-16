@@ -1,0 +1,37 @@
+# Messages for kraft
+#
+msgid "Settings"
+msgstr "Settings"
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Save changes"
+msgstr "Save changes"
+
+msgid "bits"
+msgstr "bits"
+
+msgid "words"
+msgstr "words"
+
+msgid "days"
+msgstr "days"
+
+msgid "views"
+msgstr "views"
+
+msgid "or"
+msgstr "or"
+
+msgid "today"
+msgstr "today"
+
+msgid "Not found"
+msgstr "Not found"
+
+msgid "Untitled"
+msgstr "Untitled"
+
+msgid "Filter items"
+msgstr "Filter items"

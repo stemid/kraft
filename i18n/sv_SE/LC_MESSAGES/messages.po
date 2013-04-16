@@ -1,0 +1,38 @@
+# Messages for password frank
+# Stefan Midjich, 2013.
+#
+msgid "Settings"
+msgstr "Inställningar"
+
+msgid "Close"
+msgstr "Stäng"
+
+msgid "Save changes"
+msgstr "Spara ändringar"
+
+msgid "bits"
+msgstr "bitar"
+
+msgid "words"
+msgstr "ord"
+
+msgid "days"
+msgstr "dagar"
+
+msgid "views"
+msgstr "visningar"
+
+msgid "or"
+msgstr "eller"
+
+msgid "today"
+msgstr "idag"
+
+msgid "Not found"
+msgstr "Hittades ej"
+
+msgid "Untitled"
+msgstr "Namnlös"
+
+msgid "Filter items"
+msgstr "Filtrera"
