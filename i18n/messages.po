@@ -35,3 +35,6 @@ msgstr "Untitled"
 
 msgid "Filter items"
 msgstr "Filter items"
+
+msgid "Add"
+msgstr "Add"

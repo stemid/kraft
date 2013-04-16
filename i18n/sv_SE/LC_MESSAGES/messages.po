@@ -36,3 +36,6 @@ msgstr "Namnlös"
 
 msgid "Filter items"
 msgstr "Filtrera"
+
+msgid "Add"
+msgstr "Lägg till"
