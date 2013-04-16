@@ -9,10 +9,6 @@ import td
 # Initiate Telldus library
 telldus = td.Telldus()
 
-urls = (
-    '/device/(off|on|parameter|model|protocol)', 'Device',
-)
-
 class Device:
     def __init__(self):
         from fnmatch import fnmatch
@@ -81,11 +77,3 @@ class Device:
             model = self._d.model
             if not model:
                 raise web.notfound()
-
-app = web.application(urls, globals())
-
-if __name__ == "__main__":
-    app.run()
-
-if __name__.startswith('_mod_wsgi_'):
-    application = app.wsgifunc()
